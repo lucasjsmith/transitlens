@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- Leaflet -->
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+	<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+
+	<!-- Mapbox Private Keys -->
+	<script type="text/javascript" src="keys.js"></script>
+
+	<!-- google font -->
+	<link href='http://fonts.googleapis.com/css?family=Lato:400,300italic' rel='stylesheet' type='text/css'>
+
+	<!-- geodata -->
+	<script type="text/javascript" src="geodata/wkday9AM-i.js"></script>
+	<script type="text/javascript" src="geodata/wkday3PM-i.js"></script>
+	<script type="text/javascript" src="geodata/wkday9PM-i.js"></script>
+	<script type="text/javascript" src="geodata/sat9AM-i.js"></script>
+	<script type="text/javascript" src="geodata/sat3PM-i.js"></script>
+	<script type="text/javascript" src="geodata/sat9PM-i.js"></script>	
+	<script type="text/javascript" src="geodata/sun3PM-i.js"></script>
+	<script type="text/javascript" src="geodata/sun9AM-i.js"></script>
+	<script type="text/javascript" src="geodata/sun9PM-i.js"></script>
+
+	
+	<title>Transit Lens</title>
+
+	<style>
+		body{
+			padding: 0;
+			margin: 0;
+		}
+		#map {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			height: calc(100% - 90px);
+			width: 100%;
+			padding: 0;
+			z-index: 0;
+		}
+
+		#upper {
+			z-index: 6;
+			position: absolute;
+			background-color: white;
+			width: 100%;
+			height: 40px;
+			top: 0;
+			padding: 5px 10px 15px 10px;
+			/*box-shadow: 0 5px 10px rgba(0,0,0,.2);*/
+		}
+		#upper * {
+			display: inline-block;
+			/*position: relative;*/
+			top: 50%;
+			margin-top: auto;
+			margin-bottom: auto;
+			/*transform: translateY(-50%);*/
+		}
+		.upper button {
+			padding: 10px 10px 10px 10px;
+		}
+		h3 {
+			margin: 0;
+			padding: 0px 10px 0px 0px;
+			font-family: 'Lato', sans-serif;
+			font-size: 40px;
+			cursor: default;
+			-webkit-touch-callout: none;
+    		-webkit-user-select: none;
+    		-khtml-user-select: none;
+    		-moz-user-select: none;
+    		-ms-user-select: none;
+    		user-select: none;		
+		}
+		#logo {
+			height: 40px;
+			transform: translateY(5px);
+			padding-right: 2px;
+			padding-left: 5px;
+		}
+
+		.daySet {
+			/*max-width: 300px;*/
+			padding: 0px 15px 0px 15px;
+			font-family: 'Lato', sans-serif;
+			transform: translateY(-5px);
+			/*border-left: 1px solid rgba(0,0,0,.2);*/
+		}
+
+		.daySet.dayBorder {
+			border-left: 1px solid rgba(0,0,0,.2);
+
+		}
+
+		.daySet span {
+			display: inline-block;
+			cursor: default;
+			/*margin: auto;*/
+		}
+		.daySet button {
+			display: inline-block;
+			float: left;
+			margin: 2px;
+		}
+
+		#description {
+			position: absolute;
+			background-color: rgb(150, 150, 150);
+			color: white;
+			top: 59px;
+			z-index: 4;
+			font-family: 'Lato', sans-serif;
+			font-weight: 300;
+			font-style: italic;
+			padding: 5px 5px 5px 6px;
+			margin: 0px;
+			border-top: 1px solid rgba(0,0,0,.2);
+			border-bottom: 1px solid rgba(0,0,0,.2);
+			width: 100%; 
+			box-shadow: 0 5px 10px rgba(0,0,0,.2);
+			padding-left: 17px;
+			font-size: 18px;
+		}
+		#description p {
+			margin: auto;
+			margin-top: 0;
+			margin-bottom: 0;
+			font-style: italic;
+		}
+
+
+		#scale {
+			z-index: 4;
+			position: absolute;
+			right: 0px;
+			top: 93px;
+			padding: 3px 3px 3px 10px;
+			border-radius: 0px 0px 0px 5px;
+			/*height: 20px;*/
+			/*width: 50%;*/
+			background-color: white;
+			/*border-top: 1px solid rgba(0,0,0,.2);*/
+			box-shadow: 0px 5px 10px rgba(0,0,0,.2);
+
+		}
+		#scale * {
+			display: inline-block;
+			font-family: 'Lato', sans-serif;
+			font-size: 18px
+		}
+		#scale span {
+			padding-right: 7px;
+			padding-left: 0;
+			/*padding-bottom: 2px;*/
+		}
+		.scaleColor {
+			height: 17px;
+			width: 17px;
+			opacity: .8;
+			transform: translateY(2px);
+			padding-right: 0;
+			/*background-color: red;*/
+		}
+
+		.scaleColor.r121 {background-color: rgba(102, 37, 6, 1) }
+		.scaleColor.r91  {background-color: rgba(153, 52, 4, 1) }
+		.scaleColor.r61  {background-color: rgba(204, 76, 2, 1) }
+		.scaleColor.r46  {background-color: rgba(236, 112, 20, 1) }
+		.scaleColor.r31  {background-color: rgba(254, 153, 41, 1) }
+		.scaleColor.r16  {background-color: rgba(254, 196, 79, 1) }
+		.scaleColor.r11  {background-color: rgba(254, 227, 145, 1) }
+		.scaleColor.r1   {background-color: rgba(255, 247, 188, .95) }
+
+
+		#footer {
+			position: absolute;
+			z-index: 6;
+			bottom: 0;
+			left: 0;
+			background-color: white;
+			box-shadow: 0px 5px 10px rgba(0,0,0,.2);
+			padding-top: 4px;
+			padding-bottom: 4px;
+		}
+		#footer div {
+			float: left;
+			padding: 8px 20px 8px 20px;
+			font-family: 'Lato', sans-serif;
+			font-size: 1em;
+			cursor: pointer;
+		}
+		#footer div:first-child {
+			border-right: 1px solid rgba(0,0,0,.2);
+		}
+
+		.btn {
+			border: 2px solid rgba(0,0,0,.4);
+			background-color: white;
+			color: black;
+			border-radius: 6px;
+			padding: 5px 8px 5px 8px;
+			margin: 3px;
+			/*font-family: 'Lato', sans-serif;*/
+		}
+		.btn:hover {
+			cursor: pointer;
+			background-color: rgba(0,0,0,.1);
+			border-color: rgba(0,0,0,.6);
+			/*margin: 7px;*/
+		}
+		.btn.active {
+			border-color: black;
+			font-weight: bold;
+			background: rgba(254, 153, 41, 1);
+			color: white;
+		}
+
+		#overlay-bg {
+			z-index: 5;
+			position: absolute;
+			top: 0;
+			left: 0;
+			height: 100%;
+			width: 100%;
+			background: rgba(0,0,0,.7);
+		}
+		#overlay-text {
+			z-index: 6;
+			position: absolute;
+			top: calc(10% + 90px);
+			left: 20%;
+			max-height: calc((100% - 90px) - 20%);
+			width: 60%;
+			background-color: white;
+			overflow: auto;
+			font-family: sans-serif;
+			border-radius: 5px;
+			box-shadow: 0px 5px 10px rgba(0,0,0,.7);
+			padding: 20px 26px 10px 26px;
+		}
+		#overlay-text p {
+			/*;*/
+		}
+		#overlay-text h2 {
+			margin: 0px 0px 5px 0px;
+			font-family: 'Lato', sans-serif;
+		}
+		#overlay-text h5 {
+			font-size: 1em;
+			margin: 1em 0 1em 0;
+		}
+
+		#overlay-bg img {
+			position: absolute;
+			z-index: 7;
+			height: 20px;
+			left: calc(80% + 62px);
+			top: calc(10% + 100px);
+			cursor: pointer;
+		}
+
+		.hidden {
+			display: none;
+		}
+
+	</style>
+</head>
+
+<body>
+	<div id="upper">
+		<div>
+			<img id="logo" src="img/logo.png">
+			<h3>Transit Lens</h3>
+			<div class='daySet'>
+				<span>Weekday:</span>
+				<div>
+					<span class="btn inactive" id="wkday9AM" type="button" onclick="newTimePress(wkday9AM,'wkday9AM')">9:00am</span>
+					<span class="btn inactive" id="wkday3PM" type="button" onclick="newTimePress(wkday3PM, 'wkday3PM')">3:00pm</span>
+					<span class="btn inactive" id="wkday9PM" type="button" onclick="newTimePress(wkday9PM, 'wkday9PM')">9:00pm</span>
+				</div>
+			</div>
+			<div class='daySet dayBorder'>
+				<span>Saturday:</span>
+				<div>
+					<span class="btn inactive" id="sat9AM" type="button" onclick="newTimePress(sat9AM, 'sat9AM')">9:00am</span>
+					<span class="btn inactive" id="sat3PM" type="button" onclick="newTimePress(sat3PM, 'sat3PM')">3:00pm</span>
+					<span class="btn inactive" id="sat9PM" type="button" onclick="newTimePress(sat9PM, 'sat9PM')">9:00pm</span>
+				</div>
+			</div>
+			<div class='daySet dayBorder'>
+				<span>Sunday:</span>
+				<div>
+					<span class="btn inactive" id="sun9AM" type="button" onclick="newTimePress(sun9AM, 'sun9AM')">9:00am</span>
+					<span class="btn inactive" id="sun3PM" type="button" onclick="newTimePress(sun3PM, 'sun3PM')">3:00pm</span>
+					<span class="btn inactive" id="sun9PM" type="button" onclick="newTimePress(sun9PM, 'sun9PM')">9:00pm</span>
+				</div>
+			</div>
+
+			<!-- <div>Lighter = shorter trip, darker = longer trip. Scale details to come here.</div> -->
+		</div>
+
+	</div>
+
+	<div id ="description">
+		Transit Lens lets you explore what is in reach by transit from different starting points and how that changes with time, based on real-world itineraries. Click around to dig in!
+	</div>
+
+	<div id="scale">
+		<span>Travel time, minutes:</span>
+		<div class='scaleColor r1' id='1'></div>
+		<span>0-10</span>
+		<div class='scaleColor r11'></div>
+		<span>10-15</span>
+		<div class='scaleColor r16'></div>
+		<span>15-30</span>
+		<div class='scaleColor r31'></div>
+		<span>30-45</span>
+		<div class='scaleColor r46'></div>
+		<span>45-60</span>
+		<div class='scaleColor r61'></div>
+		<span>60-90</span>
+		<div class='scaleColor r91'></div>
+		<span>90-120</span>
+		<div class='scaleColor r121'></div>
+		<span>120+</span>
+	</div>
+	<div id="map"> </div>
+
+	<div id="footer">
+		<div onclick="showOverlay('about')">About</div>
+		<div onclick="showOverlay('references')">References</div>
+	</div>
+
+	<div id ="overlay-bg" class="hidden" onclick="hideOverlay()" >
+		<img src="img/cross.png">
+	</div>
+	<div id="overlay-text" class="hidden" onclick="nothing()">
+	</div>
+
+	<script>
+		
+
+
+		// MAP SETUP
+
+		var map = L.map('map', {zoomControl: true}).setView([37.8, -96], 4);
+
+		L.tileLayer('http://api.tiles.mapbox.com/v4/' + mapBoxMapID + '/{z}/{x}/{y}.png?access_token=' + mapBoxPrivateKey , {
+				attribution: '&copy; TriMet &copy; Mapbox &copy; OpenStreetMap contributors'
+			}).addTo(map);
+
+		//FUNCTIONS LIVE HERE - sorry that they're not in any real order
+
+		function getColor(d) {
+		    return d > 120  ?  'rgba(102, 37, 6, 1)' : // '#662506' :
+		           d > 90   ?  'rgba(153, 52, 4, 1)' : // '#993404' :
+		           d > 60   ?  'rgba(204, 76, 2, 1)' : // '#cc4c02' :
+		           d > 45   ?  'rgba(236, 112, 20, 1)' : //' #ec7014' :
+		           d > 30   ?  'rgba(254, 153, 41, 1)' : // '#fe9929' :
+		           d > 15   ?  'rgba(254, 196, 79, 1)' : // '#fec44f' :
+		           d > 10   ?  'rgba(254, 227, 145, 1)' : // '#fee391' :
+		                       'rgba(255, 247, 188, .95)'  //#fff7bc' 
+		}
+
+		function style(feature) {
+			if (feature.properties.Index.toString() == currentIndex.substring(1,currentIndex.length)) {
+				console.log("a match");
+				return {
+					fillColor: getColor(eval('feature.properties.' + currentIndex)),
+			        fillOpacity: 0.55,
+			        weight: 2,
+			        opacity: 1,
+			        color: 'gray',
+			        dashArray: '3'
+				}
+
+			} else {
+			    return {
+			        fillColor: getColor(eval('feature.properties.' + currentIndex)),
+			        fillOpacity: 0.55,
+			        weight: 1,
+			        opacity: 0,
+			        color: 'white',
+			        // dashArray: '3',
+			    }
+			}
+		}
+
+		function onEachFeature (feature, layer) {
+			layer.on({
+				click: changeSelectedCell
+			});
+		}
+
+		function zoomToFeature(e) {
+		    map.fitBounds(e.target.getBounds());
+		}
+
+		function changeSelectedCell(e) {
+			currentIndex = 'i' + e.target.feature.properties.name;
+			refreshMapContents();			
+		}
+		function addGeoJson() {
+			geojson = L.geoJson(currentData, {
+				style: style,
+				onEachFeature: onEachFeature,
+			}).addTo(map);	
+		}
+
+		function refreshMapContents() {
+			map.removeLayer(geojson);
+			addGeoJson();
+			window.history.replaceState(null,null,"#" + currentIndex + "@" + currentDataName);
+
+		}
+
+		function newTimePress(dateTime, dateTimeName) {
+			document.getElementById(currentDataName).className = "btn inactive";
+			currentData = dateTime;
+			currentDataName = dateTimeName;
+			document.getElementById(currentDataName).className = "btn active";
+			refreshMapContents();
+		}
+
+		function hideOverlay() {
+			document.getElementById("overlay-bg").className = "hidden";
+			document.getElementById("overlay-text").className = "hidden";
+		}
+
+		function showOverlay(toShow) {
+			document.getElementById("overlay-bg").className = "show";
+			document.getElementById("overlay-text").className = "show";
+			if (toShow == 'about') {
+				document.getElementById("overlay-text").innerHTML = "<h2>About Transit Lens</h2><p>Visualizations of transportation systems--transit maps--have existed as long as the systems themselves. Today, however, digital technologies have removed the constraints of static transit maps, and the exploration of the boundaries of interactive visualization is just beginning. Transit Lens aims to further the burgeoning development of interactive transit visualizations, advancing visual presentation while keeping honest to accurate and valid transit information.</p><p>Transit Lens uses real-world data to visualize the effects of frequency and time span of service on access. Unlike some of the flashier online maps, this data uses travel times from actual transit itineraries, rather than heuristics that ignore wait times and transfer layovers. As such, Transit Lens allows users to explore the facets of the transit network and see an accurate representation of what is within reach at different times of the day and week.</p><p>Transit Lens is the Honors in Multimedia Scholarship thesis created by <a href='http://lucasjsmith.com'>Lucas Smith</a> at the University of Southern California.</p>";
+			} else if (toShow == "references") {
+				document.getElementById("overlay-text").innerHTML = '<h2>References</h2><h5><b>Books &amp; Writing:</b></h5><p class="p2"><span>Vuchic, Vukan R. (1999). </span><i>Transportation for livable cities.</i><span> New Brunswick, NJ: Center for Urban Policy Research).</span><br class="" /></p> <p class="p2"><span>Walker, Jarrett. (2012a). </span><i>Human transit: How clearer thinking about public transit can enrich our lives and communities.</i><span> Washington, DC: Island Press.</span><br class="" /></p> <p class="p2"><span>Walker, Jarrett. (2012b). The need for maps of your freedom. </span><i>Human Transit </i><span>[blog]. Retrieved April 21, 2015, from </span><a href="http://www.humantransit.org/2012/11/the-need-for-maps-of-your-freedom.html">http://www.humantransit.org/2012/11/the-need-for-maps-of-your-freedom.html</a><br class="" /></p> <h5><b>Static &amp; Interactive Maps:</b></h5> <p class="p2"><span>King County Metro. (2011). </span><i>Metro transit system map</i><span> [map]. Retrieved April 21, 2015, from </span><a href="http://metro.kingcounty.gov/maps/pdf/system-map-oct2011.pdf">http://metro.kingcounty.gov/maps/pdf/system-map-oct2011.pdf</a><br class="" /></p> <p class="p2"><span>Transit App, Inc. (2015). Transit (Version 3.5.2) [Mobile application software]. Retrieved April 21, 2015, from </span><a href="https://play.google.com/store/apps/details?id=com.thetransitapp.droid">https://play.google.com/store/apps/details?id=com.thetransitapp.droid</a><span> </span><br class="" /></p> <p class="p2"><span>Viryincy, Oran. (2014). </span><i>Seattle every 15 minutes (or less) </i><span>[map]. Retrieved April 21, 2015, from </span><a href="http://seattletransitblog.com/2012/10/03/seattle-every-15-minutes-or-less/">http://seattletransitblog.com/2012/10/03/seattle-every-15-minutes-or-less/</a><br class="" /></p> <p class="p2"><span>Wehrmeyer, Stefan. (n.d.). </span><i>Mapnificent</i><span>. Retrieved April 21, 2015 from </span><a href="http://www.mapnificent.net">http://www.mapnificent.net</a><br class="" /></p> <p class="p2"><span>WNYC. (2013). </span><i>Transit time NYC</i><span>. Retrieved April 21, 2015, from </span><a href="http://project.wnyc.org/transit-time/">http://project.wnyc.org/transit-time/</a><br class="" /></p> <h5><b>APIs &amp; Code Libraries:</b></h5> <p class="p2"><span>Leaflet. (2014). </span><i>Leaflet.js. </i><span>Retrieved April 21, 2015, from </span><a href="http://leafletjs.com/">http://leafletjs.com/</a><br class="" /></p> <p class="p2"><span>Mapbox. (n.d.). </span><i>Mapbox API.</i><span> Retrieved April 21, 2015, from </span><a href="https://www.mapbox.com/developers/api/">https://www.mapbox.com/developers/api/</a><br class="" /></p> <p class="p2"><span>TriMet. (2013). </span><i>Web services API</i><span>. Retrieved April 21, 2015, from </span><a href="http://developer.trimet.org/ws_docs/">http://developer.trimet.org/ws_docs/</a></p>';
+			}
+		}
+
+
+		// MAIN LOGIC
+
+
+		// Default setups:
+		var currentData = wkday9AM
+		var currentDataName = 'wkday9AM'
+		var currentIndex = 'i147'
+
+		// Restore deep-linked from URL:
+		var url = document.URL;
+		if (url.indexOf('#') > -1 && url.length - url.indexOf('#') > 1) {
+			currentIndex = url.substring(url.indexOf('#')+1,url.indexOf('@'))
+			currentDataName = (url.substring(url.indexOf('@')+1,url.length))
+			currentData = window[currentDataName];
+		}
+
+		// Add first data (use refresh after this):
+		addGeoJson();
+		map.fitBounds(geojson.getBounds());
+		map.fitBounds([
+			[45.4524242413431, -122.8000259399414],
+			[45.61235633447084, -122.48605728149415]
+		],
+		{paddingTopLeft: [30, 0]}
+		);
+		map.setMaxBounds([
+			[45.42899755666514,-122.84345626831055],
+			[45.658447607958344,-122.46665954589844]
+		]);
+
+		map.options.minZoom = (map.getZoom());
+
+		// 
+		newTimePress(currentData, currentDataName);
+
+
+
+
+		// No bounce-back handler from https://www.snip2code.com/Snippet/135915/Handler-for-leaflet-js-to-manage-max-bou
+		map.dragging._draggable.on('predrag', function() {
+			var currentTopLeft = map._initialTopLeftPoint.subtract(this._newPos);
+			var currentBounds = new L.Bounds(currentTopLeft, currentTopLeft.add(map.getSize()));
+			var limitedOffset = map._getBoundsOffset(currentBounds, map.options.maxBounds);
+			this._newPos = this._newPos.subtract(limitedOffset);
+		});
+		
+
+		// TEST STUFF:
+		// map.on('click', function(e) {
+		// 	console.log('clicked');
+		// 	console.log(e.latlng);
+
+			// popup
+			// 	.setLatLng(e.latlng)
+			// 	.setContent("Clicked at " + e.latlng.toString() + " but we don't have it working for that location quite yet")
+			// 	.openOn(map);	
+		// });
+
+		// map.on('zoomend', function(e) {
+		// 	console.log("zoom" + map.getZoom());
+		// });
+
+
+	</script>
+
+</body>
+</html>
