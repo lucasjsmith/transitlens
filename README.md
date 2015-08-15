@@ -1,4 +1,4 @@
-# transit-lens
+# Transit Lens
 
 Created as a Multimedia Scholarship honors thesis for the USC School of Cinematic Arts. Lives at http://transitlens.org
 
