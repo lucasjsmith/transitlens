@@ -365,7 +365,7 @@
 		}
 
 		function style(feature) {
-			if (feature.properties.Index.toString() == currentIndex.substring(1,currentIndex.length)) {
+			if (feature.properties.name.toString() == currentIndex.substring(1,currentIndex.length)) {
 				console.log("a match");
 				return {
 					fillColor: getColor(eval('feature.properties.' + currentIndex)),
